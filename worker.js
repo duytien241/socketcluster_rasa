@@ -24,60 +24,21 @@ class Worker extends SCWorker {
     }
     app.use(serveStatic(path.resolve(__dirname, 'public')));
 
-    // Listen for HTTP GET "/health-check".
     healthChecker.attach(this, app);
 
     httpServer.on('request', app);
     var count = 0
     scServer.on("connection", function (socket) {
-      console.log(socket.id)
-      socket.on(`bot_uttered${socket.id}`, function (data) {
-        console.log("Handled sampleClientEvent", data);
-        scServer.exchange.publish("user_uttered", {id:socket.id, message: data});
-      });
-
-      scServer.exchange.emit("customRemoteEvent", count);
-      scServer.exchange.publish("customProc", count, (err) => {
-        console.log(err);
-      });
-      var interval = setInterval(function () {
-        socket.emit("random", {
-          number: Math.floor(Math.random() * 5),
+      socket.on("user_message_evt", function (data) {
+        socket.on(`user_uttered${data.id}`, function (data) {
+          scServer.exchange.publish("user_uttered", {id:data.id, message: data});
         });
-      }, 1000);
-
+  
+      });
       socket.on("disconnect", function () {
         clearInterval(interval);
       });
     });
-
-    /**
-     * NOTE: Be sure to replace the following sample logic with your own logic.
-     */
-
-    /**
-    var count = 0;
-    // Handle incoming websocket connections and listen for events.
-    scServer.on('connection', function (socket) {
-
-      socket.on('sampleClientEvent', function (data) {
-        count++;
-        console.log('Handled sampleClientEvent', data);
-        scServer.exchange.publish('sample', count);
-      });
-
-      var interval = setInterval(function () {
-        socket.emit('random', {
-          number: Math.floor(Math.random() * 5)
-        });
-      }, 1000);
-
-      socket.on('disconnect', function () {
-        clearInterval(interval);
-      });
-
-    });
-    */
   }
 }
 
