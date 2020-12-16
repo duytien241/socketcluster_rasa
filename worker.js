@@ -28,13 +28,8 @@ class Worker extends SCWorker {
 
     httpServer.on("request", app);
     scServer.on("connection", function (socket) {
-      socket.on("user_message_evt", function (data) {
-        socket.on(`user_uttered${data.id}`, function (data) {
-          scServer.exchange.publish("user_uttered", {
-            id: data.id,
-            message: data,
-          });
-        });
+      scServer.exchange.publish("user_uttered", {
+        id: socket.id
       });
       socket.on("disconnect", function () {});
     });
